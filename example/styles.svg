@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 80.778 79.371" style="enable-background:new 0 0 80.778 79.371;" xml:space="preserve">
+<defs>
+	<style text="text/css">
+		rect { fill: #FF0000; }
+		.special-rects { fill: #00FF00; }
+		#sample-rect { fill: #0000FF; }
+	</style>
+</defs>
+<g>
+	<!-- Should be red -->
+	<rect x="0" y="0" width="20" height="20" />
+	<!-- Should be green -->
+	<rect class="special-rects" x="0" y="20" width="20" height="20" />
+	<!-- Should be blue -->
+	<rect id="sample-rect" x="0" y="40" width="20" height="20" />
+</g>
+</svg>

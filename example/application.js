@@ -1,6 +1,11 @@
 /* eslint-disable */
 window.onload = function () {
-  // Create renderer and view
+  addExample('vlight.svg')
+  addExample('styles.svg')
+};
+
+function addExample(path) {
+	// Create renderer and view
   var container = new PIXI.Container();
   var renderer = PIXI.autoDetectRenderer(810, 800, {
     antialias: true
@@ -11,8 +16,8 @@ window.onload = function () {
   graphics.scale.y = 10
   container.addChild(graphics);
 
-  $.get('vlight.svg', function (content) {
+  $.get(path, function (content) {
     SVGGraphics.drawSVG(graphics, content);
     renderer.render(container);
   });
-};
+}

@@ -1,8 +1,26 @@
 var PIXI = require('pixi.js')
 var color2color = require('./vendor/color2color')
+var SVGGraphicsContext = require('./SVGGraphicsContext');
+var SVGStyle = require('./SVGStyle');
 
 function SVGGraphics (graphics) {
   this._graphics = graphics
+
+  this._context = new SVGGraphicsContext();
+}
+
+SVGGraphics.prototype.pushContext = function() {
+  this._context = new SVGGraphicsContext(this._context);
+}
+
+SVGGraphics.prototype.popContext = function() {
+  if (this._context.parentCtx) {
+    this._context = _context.getParent();
+  }
+}
+
+SVGGraphics.prototype.getContext = function() {
+  return this._context;
 }
 
 /**
@@ -32,13 +50,22 @@ SVGGraphics.prototype.drawSvgNode = function (node) {
  * @param  {SVGGroupElement} node
  */
 SVGGraphics.prototype.drawGNode = function (node) {
+
+  this.pushContext();
+
+  this.applySvgAttributes(node);
+  
   var children = node.children || node.childNodes
   var child
   for (var i = 0, len = children.length; i < len; i++) {
     child = children[i]
     if (child.nodeType !== 1) { continue }
     this.drawNode(child)
+
+    this.applySvgAttributes(node);
   }
+
+  this.popContext();
 }
 
 /**
@@ -308,7 +335,10 @@ SVGGraphics.prototype.drawPathNode = function (node) {
  * @param  {SVGElement} node
  */
 SVGGraphics.prototype.applySvgAttributes = function (node) {
-  var attributes = {}
+  var context = this.getContext();
+
+  // Get css-applied attributes
+  var attributes = context.getAttributes(node);
 
   // Get node attributes
   var i = node.attributes.length
@@ -338,20 +368,22 @@ SVGGraphics.prototype.applySvgAttributes = function (node) {
   }
 
   // Apply stroke style
-  var strokeColor = 0x000000, strokeWidth = 1, strokeAlpha = 0
+  if (attributes.stroke || attributes['stroke-width']) {
+    var strokeColor = undefined, strokeWidth = undefined, strokeAlpha = undefined
 
-  var color, intColor
-  if (attributes.stroke) {
-    color = color2color(attributes.stroke, 'array')
-    intColor = 256 * 256 * color[0] + 256 * color[1] + color[2]
-    strokeColor = intColor
-    strokeAlpha = color[3]
-  }
+    var color, intColor
+    if (attributes.stroke) {
+      color = color2color(attributes.stroke, 'array')
+      intColor = 256 * 256 * color[0] + 256 * color[1] + color[2]
+      strokeColor = intColor
+      strokeAlpha = color[3]
+    }
 
-  if (attributes['stroke-width']) {
-    strokeWidth = parseInt(attributes['stroke-width'], 10)
+    if (attributes['stroke-width']) {
+      strokeWidth = parseInt(attributes['stroke-width'], 10)
+    }
+    this._graphics.lineStyle(strokeWidth, strokeColor, strokeAlpha)
   }
-  this._graphics.lineStyle(strokeWidth, strokeColor, strokeAlpha)
 
   // Apply fill style
   var fillColor = 0x000000, fillAlpha = 0
@@ -363,6 +395,39 @@ SVGGraphics.prototype.applySvgAttributes = function (node) {
 
     this._graphics.beginFill(fillColor, fillAlpha)
   }
+}
+
+SVGGraphics.prototype.drawDefsNode = function (node) {
+  var children = node.children || node.childNodes
+  var child
+  for (var i = 0, len = children.length; i < len; i++) {
+    child = children[i]
+    if (child.nodeType !== 1) { continue }
+
+    var id = child.getAttribute('id');
+
+    if (id) {
+      this.getContext().addDef(id, child);
+    }
+
+    var tagName = (child.localName || child.tagName).toLowerCase();
+
+    if (tagName == "style") {
+      this.drawStyleNode(child);
+    }
+  }
+}
+
+SVGGraphics.prototype.drawStyleNode = function (node) {
+
+  var type = node.getAttribute('type');
+
+  if (type == "text/css" || !type) {
+    var style = SVGStyle.parse(node.innerText || node.textContent);
+
+    this.getContext().appendStyles(style)
+  }
+
 }
 
 /**
